@@ -2,12 +2,7 @@
     "name": "TheengsDecoder",
     "keywords": "ble, json, decoder",
     "description": "A simple, efficient, portable and lightweight library for Internet of Things messages decoding.",
-    "homepage": "https://theengs.github.io/decoder/",
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/theengs/decoder.git"
-    },
-    "version": "1.8.5",
+    "version": "9.0.0",
     "authors":
     [
         {
@@ -18,16 +13,5 @@
             "name": "Ryan Powell"
         }
     ],
-    "build": {
-        "extraScript": "scripts/remove_arduino_json.py"
-    },
-    "export": {
-        "exclude": [
-            "*.github",
-            "*.gitmodules"
-          ]
-    },
-    "frameworks": "*",
-    "platforms": "*",
     "license":"GPL-3.0-or-later"
   }
