@@ -23,11 +23,7 @@
 #include <string.h>
 
 #include "decoder.h"
-#ifdef SKBUILD
-#  include "shared/theengs.h"
-#else
-#  include "../include/shared/theengs.h"
-#endif
+#include "theengs.h"
 
 // Utility function local to the bridge's implementation
 TheengsDecoder* AsDecoder(void* decoder) { return reinterpret_cast<TheengsDecoder*>(decoder); }
@@ -42,7 +38,7 @@ void Theengs_DestroyDecoder(void* decoder) {
 }
 
 const char* Theengs_DecodeBLE(void* decoder, const char* json_data) {
-  StaticJsonDocument<1024> doc;
+  JsonDocument doc;
   DeserializationError err = deserializeJson(doc, json_data);
   if (!err) {
     JsonObject bleObject;
