@@ -94,6 +94,7 @@ void setup()
   NimBLEDevice::init("ESP32-Scanner");    
   NimBLEScan* pBLEScan = NimBLEDevice::getScan(); 
 
+  /*
   NimBLEAddress sensor_izba("7C:C6:B6:72:A0:5C", BLE_ADDR_PUBLIC);
   NimBLEAddress sensor_spalna("38:39:8f:85:AC:03", BLE_ADDR_PUBLIC);
 
@@ -101,6 +102,7 @@ void setup()
   NimBLEDevice::whiteListAdd(sensor_spalna);
 
   pBLEScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
+  */
 
   pBLEScan->setScanCallbacks(&scanCallbacks, false);
   pBLEScan->setActiveScan(true);         
