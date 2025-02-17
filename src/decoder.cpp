@@ -35,12 +35,6 @@
     {}
 #endif
 
-#ifdef UNIT_TESTING
-#  define TEST_MAX_DOC 16384UL
-#  include <assert.h>
-static size_t peakDocSize = 0;
-#endif
-
 #define SVC_DATA "servicedata"
 #define MFG_DATA "manufacturerdata"
 
@@ -475,11 +469,7 @@ bool TheengsDecoder::checkPropCondition(const JsonArray& prop_condition,
  * decodes the data if a match is found.
  */
 int TheengsDecoder::decodeBLEJson(JsonObject& jsondata) {
-#ifdef UNIT_TESTING
-  DynamicJsonDocument doc(TEST_MAX_DOC);
-#else
-  DynamicJsonDocument doc(m_docMax);
-#endif
+  JsonDocument doc;
   const char* svc_data = jsondata[SVC_DATA].as<const char*>();
   const char* mfg_data = jsondata[MFG_DATA].as<const char*>();
   const char* dev_name = jsondata["name"].as<const char*>();
@@ -498,15 +488,8 @@ int TheengsDecoder::decodeBLEJson(JsonObject& jsondata) {
     DeserializationError error = deserializeJson(doc, _devices[i_main][0]);
     if (error) {
       DEBUG_PRINT("deserializeJson() failed: %s\n", error.c_str());
-#ifdef UNIT_TESTING
-      assert(0);
-#endif
       return success;
     }
-#ifdef UNIT_TESTING
-    if (doc.memoryUsage() > peakDocSize)
-      peakDocSize = doc.memoryUsage();
-#endif
 
     /* found a match, extract the data */
     JsonArray selectedCondition;
@@ -523,7 +506,7 @@ int TheengsDecoder::decodeBLEJson(JsonObject& jsondata) {
       jsondata["brand"] = doc["brand"];
       jsondata["model"] = doc["model"];
       jsondata["model_id"] = doc["model_id"];
-      if (doc.containsKey("tag")) {
+      if (!doc["tag"].isNull()) {
         doc.add("type");
         doc["type"] = NULL;
 
@@ -696,7 +679,7 @@ int TheengsDecoder::decodeBLEJson(JsonObject& jsondata) {
             }
 
             /* Do any required post processing of the value */
-            if (prop.containsKey("post_proc")) {
+            if (!prop["post_proc"].isNull()) {
               JsonArray post_proc = prop["post_proc"];
               for (unsigned int i = 0; i < post_proc.size(); i += 2) {
                 if (cal_val && post_proc[i + 1].as<const char*>() != NULL &&
@@ -805,7 +788,7 @@ int TheengsDecoder::decodeBLEJson(JsonObject& jsondata) {
             }
 
             /* Cast to a different value type if specified */
-            if (prop.containsKey("is_bool")) {
+            if (!prop["is_bool"].isNull()) {
               jsondata[_key] = (bool)temp_val;
             } else {
               jsondata[_key] = temp_val;
@@ -873,7 +856,7 @@ int TheengsDecoder::decodeBLEJson(JsonObject& jsondata) {
             std::string value(src + decoder[2].as<int>(), decoder[3].as<int>());
 
             /* Lookup table */
-            if (prop.containsKey("lookup")) {
+            if (!prop["lookup"].isNull()) {
               JsonArray lookup = prop["lookup"];
               for (unsigned int i = 0; i < lookup.size(); i += 2) {
                 if (lookup[i].as<std::string>() == value) {
@@ -942,7 +925,7 @@ int TheengsDecoder::decodeBLEJson(JsonObject& jsondata) {
             // DEBUG_PRINT("PROP: %s\n", prop.as<JsonObject>();
 
             if (ascii != "") {
-              if (prop.containsKey("is_double")) {
+              if (!prop["is_double"].isNull()) {
                 jsondata[sanitizeJsonKey(kv.key().c_str())] = std::stod(ascii);
               } else {
                 jsondata[sanitizeJsonKey(kv.key().c_str())] = ascii;
@@ -966,17 +949,9 @@ int TheengsDecoder::getTheengModel(JsonDocument& doc, const char* model_id) {
     DeserializationError error = deserializeJson(doc, _devices[i][0]);
     if (error) {
       DEBUG_PRINT("deserializeJson() failed: %s\n", error.c_str());
-#ifdef UNIT_TESTING
-      assert(0);
-#endif
       break;
     }
-#ifdef UNIT_TESTING
-    if (doc.memoryUsage() > peakDocSize)
-      peakDocSize = doc.memoryUsage();
-#endif
-
-    if (doc.containsKey("model_id")) {
+    if (!doc["model_id"].isNull()) {
       if (strlen(doc["model_id"].as<const char*>()) != mid_len) {
         continue;
       }
@@ -994,43 +969,27 @@ std::string TheengsDecoder::getTheengProperties(int mod_index) {
 }
 
 std::string TheengsDecoder::getTheengProperties(const char* model_id) {
-#ifdef UNIT_TESTING
-  DynamicJsonDocument doc(TEST_MAX_DOC);
-#else
-  DynamicJsonDocument doc(m_docMax);
-#endif
+  JsonDocument doc;
   int mod_index = getTheengModel(doc, model_id);
   return (mod_index < 0 || mod_index >= BLE_ID_NUM::BLE_ID_MAX) ? "" : _devices[mod_index][1];
 }
 
 std::string TheengsDecoder::getTheengAttribute(int model_id, const char* attribute) {
-#ifdef UNIT_TESTING
-  DynamicJsonDocument doc(TEST_MAX_DOC);
-#else
-  DynamicJsonDocument doc(m_docMax);
-#endif
+  JsonDocument doc;
   std::string ret_attr = "";
   if (model_id >= 0 && model_id < BLE_ID_NUM::BLE_ID_MAX) {
     DeserializationError error = deserializeJson(doc, _devices[model_id][0]);
     if (error) {
       DEBUG_PRINT("deserializeJson() failed: %s\n", error.c_str());
-#ifdef UNIT_TESTING
-      assert(0);
-#endif
     } else if (!doc[attribute].isNull()) {
       ret_attr = doc[attribute].as<std::string>();
     }
   }
-
   return ret_attr;
 }
 
 std::string TheengsDecoder::getTheengAttribute(const char* model_id, const char* attribute) {
-#ifdef UNIT_TESTING
-  DynamicJsonDocument doc(TEST_MAX_DOC);
-#else
-  DynamicJsonDocument doc(m_docMax);
-#endif
+  JsonDocument doc;
   int mod_index = getTheengModel(doc, model_id);
 
   if (mod_index >= 0 && !doc[attribute].isNull()) {
@@ -1046,12 +1005,3 @@ void TheengsDecoder::setMinServiceDataLen(size_t len) {
 void TheengsDecoder::setMinManufacturerDataLen(size_t len) {
   m_minMfgDataLen = len;
 }
-
-#ifdef UNIT_TESTING
-int TheengsDecoder::testDocMax() {
-  if (peakDocSize > m_docMax) {
-    DEBUG_PRINT("Error: peak doc size > max; peak: %lu, max: %lu\n", peakDocSize, m_docMax);
-  }
-  return m_docMax - peakDocSize;
-}
-#endif
