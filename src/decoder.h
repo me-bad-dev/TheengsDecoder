@@ -40,9 +40,6 @@ public:
   std::string getTheengAttribute(const char* model_id, const char* attribute);
   std::string getTheengAttribute(int model_id, const char* attribute);
   int getTheengModel(JsonDocument& doc, const char* model_id);
-#ifdef UNIT_TESTING
-  int testDocMax();
-#endif
 
   enum BLE_ID_NUM {
     UNKNOWN_MODEL = -1,
@@ -190,7 +187,6 @@ private:
                                const char* dev_name, const char* svc_uuid, const char* mac_id);
   std::string sanitizeJsonKey(const char* key_in);
 
-  size_t m_docMax = 12200;
   size_t m_minSvcDataLen = 20;
   size_t m_minMfgDataLen = 16;
 };
